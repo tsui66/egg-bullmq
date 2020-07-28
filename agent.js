@@ -13,12 +13,12 @@ module.exports = agent => {
 
   class QueueStrategy extends agent.ScheduleStrategy {
     start() {
-      const { schedule: { queue: queueName, worker, prefix } } = this;
+      const { schedule } = this;
       const { default: { redis } } = config;
       if (worker === 'all') {
-        this.sendAll({ redis, queueName, prefix });
+        this.sendAll(Object.assign({}, schedule, { redis }));
       } else if (worker === 'one') {
-        this.sendOne({ redis, queueName, prefix });
+        this.sendOne(Object.assign({}, schedule, { redis }));
       } else {
         throw new Error(`[egg-bullmq] unknow worker type ${worker}`);
       }
