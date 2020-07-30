@@ -46,11 +46,28 @@ module.exports = agent => {
           agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
           return;
         }
+        const emitterId = `${job.queue.keys.id}:${job.id}`;
+        const emitCompleted = `${emitterId}:completed`;
+        const emitProgress = `${emitterId}:updateProgress`;
+        const emitter = { emitCompleted, emitProgress };
         if (schedule.worker === 'one') {
-          this.sendOne({ schedule, job });
+          this.sendOne({ schedule, job, emitter });
         } else {
           throw new Error('[egg-bullmq] workflow pattern only support `one`');
         }
+        // updateProgress
+        agent.messenger.on(emitProgress, async progress => {
+          if (progress) {
+            progress = parseFloat(progress);
+          } else {
+            // TODO SOME STUFF
+          }
+          job.updateProgress(progress);
+        });
+        // await one job completed
+        await new Promise(resolve => {
+          agent.messenger.on(emitCompleted, resolve);
+        });
       }, { connection, prefix });
       agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
       // agent.messenger.on('bullmq_ack', data => {});
