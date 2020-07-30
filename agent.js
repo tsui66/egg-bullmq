@@ -30,7 +30,7 @@ module.exports = agent => {
           throw new Error(`[egg-bullmq] unknow worker type ${schedule.worker}`);
         }
       }, { connection, prefix });
-      agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worke`);
+      agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
     }
   }
 
@@ -42,7 +42,6 @@ module.exports = agent => {
       const { schedule: { queue: queueName, prefix } } = this;
       const { default: { redis: connection } } = config;
       const worker = new Worker(queueName, async job => {
-        agent.coreLogger.info('[egg-bullmq] using egg-bullmq plugin to connect RabbitMQ append to an issue');
         if (job.data.length > 0) {
           agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
           return;
@@ -53,7 +52,7 @@ module.exports = agent => {
           throw new Error('[egg-bullmq] workflow pattern only support `one`');
         }
       }, { connection, prefix });
-      agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worke`);
+      agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
       // agent.messenger.on('bullmq_ack', data => {});
     }
   }
