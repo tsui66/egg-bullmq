@@ -17,7 +17,6 @@ module.exports = agent => {
       const { schedule: { queue: queueName, prefix } } = this;
       const { default: { redis: connection } } = config;
       const worker = new Worker(queueName, async job => {
-        agent.coreLogger.info('[egg-bullmq] using egg-bullmq plugin to connect RabbitMQ append to an issue');
         if (job.data.length > 0) {
           agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
           return;
