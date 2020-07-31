@@ -48,7 +48,8 @@ module.exports = agent => {
         const emitterId = `${job.queue.keys.id}:${job.id}`;
         const emitCompleted = `${emitterId}:completed`;
         const emitProgress = `${emitterId}:updateProgress`;
-        const emitter = { emitCompleted, emitProgress };
+        const emitRemoved = `${emitterId}:removed`;
+        const emitter = { emitCompleted, emitProgress, emitRemoved };
         if (schedule.worker === 'one') {
           this.sendOne({ schedule, job, emitter });
         } else {
@@ -66,6 +67,11 @@ module.exports = agent => {
         // await one job completed
         await new Promise(resolve => {
           agent.messenger.on(emitCompleted, resolve);
+        });
+        // when remove a job, notify all workers clear timers
+        agent.on('removed', job => {
+          agent.coreLogger.info(`[egg-bullmq] Job id: ${job.id} has been removed`);
+          agent.messenger.sendToApp(emitRemoved, job);
         });
       }, { connection, prefix });
       agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
