@@ -1,7 +1,9 @@
 'use strict';
 
+const assert = require('assert');
 const createQueue = require('./lib/bullmq');
 const { Worker } = require('bullmq');
+const { createBullConnection } = require('./lib/connectRedis');
 
 module.exports = agent => {
   agent.logger.info('[egg-bullmq] plugin init');
@@ -15,7 +17,13 @@ module.exports = agent => {
     start() {
       const { schedule } = this;
       const { schedule: { queue: queueName, prefix } } = this;
-      const { default: { redis: connection } } = config;
+      const { default: { redis: connection }, client, clients } = config;
+      if (!client && !clients) {
+        throw new Error('[egg-bullmq] Either `client` or `clients` must be provided in config');
+      }
+      const workflowConfig = client ? client : clients.workflow;
+      assert(workflowConfig.kind, '[egg-bullmq] kind is required on config');
+      const redisInstance = createBullConnection(workflowConfig.kind, connection);
       const worker = new Worker(queueName, async job => {
         if (job.data.length > 0) {
           agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
@@ -26,9 +34,9 @@ module.exports = agent => {
         } else if (schedule.worker === 'one') {
           this.sendOne({ schedule, job });
         } else {
-          throw new Error(`[egg-bullmq] unknow worker type ${schedule.worker}`);
+          throw new Error(`[egg-bullmq] unknow worker kind ${schedule.worker}`);
         }
-      }, { connection, prefix });
+      }, { connection: redisInstance, prefix });
       agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
     }
   }
@@ -39,7 +47,13 @@ module.exports = agent => {
     async start() {
       const { schedule } = this;
       const { schedule: { queue: queueName, prefix } } = this;
-      const { default: { redis: connection } } = config;
+      const { default: { redis: connection }, client, clients } = config;
+      if (!client && !clients) {
+        throw new Error('[egg-bullmq] Either `client` or `clients` must be provided in config');
+      }
+      const workflowConfig = client ? client : clients.workflow;
+      assert(workflowConfig.kind, '[egg-bullmq] kind is required on config');
+      const redisInstance = createBullConnection(workflowConfig.kind, connection);
       const worker = new Worker(queueName, async job => {
         if (job.data.length > 0) {
           agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
@@ -73,7 +87,7 @@ module.exports = agent => {
           agent.coreLogger.info(`[egg-bullmq] Job id: ${job.id} has been removed`);
           agent.messenger.sendToApp(emitRemoved, job);
         });
-      }, { connection, prefix });
+      }, { connection: redisInstance, prefix });
       agent.coreLogger.info(`[egg-bullmq] Worker named: ${worker.name} has worked`);
       // agent.messenger.on('bullmq_ack', data => {});
     }
