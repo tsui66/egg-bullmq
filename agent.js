@@ -55,10 +55,10 @@ module.exports = agent => {
       assert(workflowConfig.kind, '[egg-bullmq] kind is required on config');
       const redisInstance = createBullConnection(workflowConfig.kind, connection);
       const worker = new Worker(queueName, async job => {
-        if (job.data.length > 0) {
-          agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
-          return;
-        }
+        // if (job.data.length < 0) {
+        //   agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
+        //   return;
+        // }
         const emitterId = `${job.queue.keys.id}:${job.id}`;
         const emitCompleted = `${emitterId}:completed`;
         const emitProgress = `${emitterId}:updateProgress`;
