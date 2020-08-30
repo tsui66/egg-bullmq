@@ -1,7 +1,7 @@
 {
   "name": "egg-bullmq",
   "version": "1.0.0",
-  "description": "This is a plugin for Egg.js.",
+  "description": "This is a bullmq plugin for Egg.js.",
   "eggPlugin": {
     "name": "bullmq"
   },
