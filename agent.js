@@ -14,21 +14,17 @@ module.exports = agent => {
   }
 
   class QueueStrategy extends agent.ScheduleStrategy {
-    start() {
+    async start() {
       const { schedule } = this;
       const { schedule: { queue: queueName, prefix } } = this;
       const { default: { redis: connection }, client, clients } = config;
       if (!client && !clients) {
         throw new Error('[egg-bullmq] Either `client` or `clients` must be provided in config');
       }
-      const workflowConfig = client ? client : clients.workflow;
+      const workflowConfig = client ? client : clients.queue;
       assert(workflowConfig.kind, '[egg-bullmq] kind is required on config');
       const redisInstance = createBullConnection(workflowConfig.kind, connection);
       const worker = new Worker(queueName, async job => {
-        if (job.data.length > 0) {
-          agent.coreLogger.info('[egg-bullmq] there is non job data passed, default pass');
-          return;
-        }
         if (schedule.worker === 'all') {
           this.sendAll({ schedule, job });
         } else if (schedule.worker === 'one') {
